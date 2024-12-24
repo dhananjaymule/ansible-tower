@@ -1,0 +1,16 @@
+- name: Automate etcd Backup in OpenShift 4.x
+  hosts: all
+  become: yes
+  tasks:
+    - name: Start debug session on master node
+      command: oc debug node/{{ inventory_hostname }}
+      register: debug_session
+
+    - name: Run cluster-backup.sh script
+      command: /usr/local/bin/cluster-backup.sh /tmp/etcd-backup
+      when: debug_session is succeeded
+
+    - name: Compress backup files
+      archive:
+        path: /tmp/etcd-backup
+        dest: /tmp/etcd-backup-{{ ansible_date_time.date }}.tar.gz
